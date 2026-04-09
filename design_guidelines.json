@@ -1,0 +1,135 @@
+{
+  "project_name": "Wassel",
+  "domain": "E-commerce Order Management Platform",
+  "theme": "light",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "emotional_tone": "Authority, Clarity, Functional, Efficient, Professional",
+  "typography": {
+    "headings": {
+      "font_family": "Cabinet Grotesk",
+      "import_url": "https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700,400,900&display=swap",
+      "styles": {
+        "h1": "text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-none text-slate-900",
+        "h2": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-900",
+        "h3": "text-xl sm:text-2xl font-semibold tracking-tight text-slate-800",
+        "h4": "text-lg sm:text-xl font-medium tracking-tight text-slate-800"
+      }
+    },
+    "body": {
+      "font_family": "IBM Plex Sans",
+      "import_url": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap",
+      "styles": {
+        "base": "text-base leading-relaxed text-slate-600 font-normal",
+        "small": "text-sm text-slate-500",
+        "overline": "text-xs font-bold uppercase tracking-[0.2em] text-slate-400"
+      }
+    }
+  },
+  "colors": {
+    "background": {
+      "default": "#F8FAFC",
+      "surface": "#FFFFFF",
+      "surface_hover": "#F1F5F9"
+    },
+    "text": {
+      "primary": "#0F172A",
+      "secondary": "#475569",
+      "muted": "#94A3B8"
+    },
+    "brand": {
+      "primary": "#0055FF",
+      "primary_hover": "#0044CC",
+      "accent": "#0F172A"
+    },
+    "status": {
+      "pending": "#F59E0B",
+      "confirmed": "#3B82F6",
+      "shipped": "#8B5CF6",
+      "delivered": "#10B981",
+      "returned": "#EF4444"
+    },
+    "borders": {
+      "default": "#E2E8F0",
+      "focus": "#0055FF"
+    }
+  },
+  "layout": {
+    "spacing_scale": "Tailwind standard (p-1 to p-64)",
+    "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "bento_grid": "grid grid-cols-1 md:grid-cols-8 lg:grid-cols-12 gap-8 lg:gap-12",
+    "border_radius": {
+      "base": "rounded-none or max rounded-md (8px max)"
+    },
+    "shadows": {
+      "ambient": "shadow-sm",
+      "card": "shadow-[0_2px_10px_rgba(0,0,0,0.04)]",
+      "hover": "shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
+    }
+  },
+  "components": {
+    "cards": {
+      "base": "bg-white border border-slate-200 rounded-md p-6",
+      "interactive": "hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
+    },
+    "buttons": {
+      "primary": "bg-blue-600 text-white font-medium rounded-md px-6 py-2 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors",
+      "secondary": "bg-slate-100 text-slate-900 font-medium rounded-md px-6 py-2 hover:bg-slate-200 border border-slate-200 transition-colors",
+      "destructive": "bg-rose-500 text-white font-medium rounded-md px-6 py-2 hover:bg-rose-600 transition-colors"
+    },
+    "inputs": {
+      "base": "w-full border border-slate-300 rounded-md px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-slate-400 bg-white"
+    },
+    "badges": {
+      "base": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+      "pending": "bg-amber-100 text-amber-800",
+      "called": "bg-indigo-100 text-indigo-800",
+      "confirmed": "bg-blue-100 text-blue-800",
+      "shipped": "bg-purple-100 text-purple-800",
+      "delivered": "bg-emerald-100 text-emerald-800",
+      "returned": "bg-rose-100 text-rose-800"
+    },
+    "navigation": {
+      "header": "sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200",
+      "sidebar": "fixed left-0 w-64 h-full bg-slate-900 text-white border-r border-slate-800"
+    }
+  },
+  "motion": {
+    "default_transition": "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    "hover_lift": "-translate-y-1",
+    "page_load": "fade-in slide-in-from-bottom-4 duration-500 ease-out"
+  },
+  "icons": {
+    "library": "lucide-react",
+    "stroke_width": 2,
+    "size": "w-5 h-5"
+  },
+  "images": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1768796373360-95d80c5830fb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzV8MHwxfHNlYXJjaHwzfHxlY29tbWVyY2UlMjB3YXJlaG91c2UlMjBsb2dpc3RpY3N8ZW58MHx8fHwxNzc1Nzc0OTQ5fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Workers moving pallets in a large warehouse",
+      "usage": "Landing page hero section with a dark overlay (bg-slate-900/60) to allow text visibility"
+    },
+    "delivery_integration": {
+      "url": "https://images.unsplash.com/photo-1764696745397-42701a7efd3f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHw0fHxkZWxpdmVyeSUyMHBhY2thZ2VzJTIwYm94ZXN8ZW58MHx8fHwxNzc1Nzc0OTQ5fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Man pushing boxes on cart",
+      "usage": "Feature section showcasing delivery company integrations"
+    },
+    "team_collaboration": {
+      "url": "https://images.unsplash.com/photo-1758691737421-86dd84bd2951?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzh8MHwxfHNlYXJjaHwyfHxidXNpbmVzcyUyMHRlYW0lMjB3b3JraW5nJTIwbGFwdG9wfGVufDB8fHx8MTc3NTc3NDk0OXww&ixlib=rb-4.1.0&q=85",
+      "description": "Colleagues discussing work at their desks",
+      "usage": "Multi-user team feature section on landing page"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Use pure HTML + Tailwind for marketing pages (landing, about) to ensure high visual impact. Avoid standard Shadcn components for structural marketing layouts, but use them for interactive elements (forms, modals).",
+    "For the Dashboard, strictly use Shadcn components heavily customized to match the Swiss & High-Contrast archetype. Keep border-radius to a maximum of 8px.",
+    "Data grids and tables MUST support horizontal scrolling and use dense spacing (p-3 or p-4 inside cells). Ensure proper contrast for status badges.",
+    "Implement 'data-testid' attributes on ALL interactive elements (buttons, links, form inputs) to facilitate automated testing.",
+    "Use pure React and Tailwind for animations, utilizing transition-all duration-200 ease-out on buttons and cards.",
+    "Never use full-screen color gradients. Stick to solid white or slate-50 backgrounds for the app, creating structure with 1px borders.",
+    "The hero image on the landing page MUST use an overlay like bg-slate-900/60 to ensure text readability.",
+    "For the 58 Wilayas selection, use a searchable combobox from Shadcn (Command + Popover) instead of a native select dropdown.",
+    "For delivery companies (Yalidine, ZR Express, Maystro, EcoTrack) and order sources (WhatsApp, Facebook, Google Sheets), use standard SVG icons or simple logos if actual ones are unavailable; do NOT use generic placeholder image URLs."
+  ]
+}
