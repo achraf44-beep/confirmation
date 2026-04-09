@@ -1,19 +1,46 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@inject Client.Services.AuthService AuthService
+@inject NavigationManager Navigation
 
 <div class="app-shell">
     <header class="app-header">
         <a class="brand" href="/">Wassel</a>
 
         <nav class="app-nav" aria-label="Primary">
-            <NavLink href="/" Match="NavLinkMatch.All">Landing</NavLink>
-            <NavLink href="/login">Login</NavLink>
-            <NavLink href="/dashboard">Dashboard</NavLink>
+            <NavLink href="/" Match="NavLinkMatch.All" data-testid="nav-home">Accueil</NavLink>
+            
+            @if (AuthService.IsAuthenticated)
+            {
+                <NavLink href="/dashboard" data-testid="nav-dashboard">Dashboard</NavLink>
+                <NavLink href="/customers" data-testid="nav-customers">Clients</NavLink>
+                <NavLink href="/products" data-testid="nav-products">Produits</NavLink>
+                
+                <div class="user-menu">
+                    <span class="user-email">@AuthService.CurrentUser?.Email</span>
+                    <button class="btn btn-secondary btn-sm" @onclick="Logout" data-testid="logout-btn">Déconnexion</button>
+                </div>
+            }
+            else
+            {
+                <NavLink href="/login" data-testid="nav-login">Connexion</NavLink>
+            }
         </nav>
     </header>
 
     <main class="app-main">
         @Body
     </main>
+    
+    <footer class="app-footer">
+        <p>Wassel - Plateforme de gestion e-commerce pour l'Algérie</p>
+        <p class="footer-links">
+            <span>58 Wilayas</span>
+            <span>•</span>
+            <span>COD First</span>
+            <span>•</span>
+            <span>Multi-sources</span>
+        </p>
+    </footer>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>
@@ -21,3 +48,49 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+<style>
+    .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-left: auto;
+    }
+    
+    .user-email {
+        color: rgba(238, 243, 255, 0.7);
+        font-size: 0.9rem;
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .app-footer {
+        margin-top: 3rem;
+        padding: 2rem;
+        text-align: center;
+        color: rgba(238, 243, 255, 0.5);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .app-footer p {
+        margin: 0.5rem 0;
+    }
+    
+    .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        font-size: 0.9rem;
+    }
+</style>
+
+@code {
+    private void Logout()
+    {
+        AuthService.Logout();
+        Navigation.NavigateTo("/login");
+    }
+}

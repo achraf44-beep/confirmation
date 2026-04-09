@@ -1,241 +1,559 @@
 @page "/dashboard"
 
+@inject Client.Services.ApiService ApiService
+@inject Client.Services.AuthService AuthService
+@inject NavigationManager Navigation
+
 <PageTitle>Wassel | Dashboard</PageTitle>
 
-<div class="dashboard-page">
-    <section class="dashboard-shell">
-        <div class="dashboard-topbar">
-            <div class="search-field">
-                <input @bind="searchTerm" @bind:event="oninput" placeholder="Rechercher" />
-            </div>
-
-            <button type="button" class="filter-pill">Tous les produits</button>
-            <button type="button" class="filter-pill">All Stores</button>
-            <button type="button" class="filter-pill">Toutes les wilayas</button>
-            <button type="button" class="filter-pill">Cette année</button>
+<div class="dashboard-page" data-testid="dashboard-page">
+    @if (!AuthService.IsAuthenticated)
+    {
+        <div class="auth-required">
+            <p>Veuillez vous connecter pour accéder au dashboard.</p>
+            <NavLink class="btn btn-primary" href="/login">Se connecter</NavLink>
         </div>
+    }
+    else
+    {
+        <!-- Stats Cards -->
+        <section class="stats-row" data-testid="stats-row">
+            <div class="stat-card">
+                <span class="stat-label">Total commandes</span>
+                <strong class="stat-value" data-testid="stat-total-orders">@(stats?.TotalOrders ?? 0)</strong>
+            </div>
+            <div class="stat-card stat-card--pending">
+                <span class="stat-label">En attente</span>
+                <strong class="stat-value" data-testid="stat-pending">@(stats?.PendingOrders ?? 0)</strong>
+            </div>
+            <div class="stat-card stat-card--confirmed">
+                <span class="stat-label">Confirmées</span>
+                <strong class="stat-value" data-testid="stat-confirmed">@(stats?.ConfirmedOrders ?? 0)</strong>
+            </div>
+            <div class="stat-card stat-card--shipped">
+                <span class="stat-label">Expédiées</span>
+                <strong class="stat-value" data-testid="stat-shipped">@(stats?.ShippedOrders ?? 0)</strong>
+            </div>
+            <div class="stat-card stat-card--delivered">
+                <span class="stat-label">Livrées</span>
+                <strong class="stat-value" data-testid="stat-delivered">@(stats?.DeliveredOrders ?? 0)</strong>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Taux confirmation</span>
+                <strong class="stat-value" data-testid="stat-confirmation-rate">@(stats?.ConfirmationRate ?? 0)%</strong>
+            </div>
+        </section>
 
-        <div class="status-filter-row">
-            @foreach (var status in StatusFilters)
-            {
-                <button type="button"
-                        class="status-filter @(selectedStatus == status ? "status-filter--active" : string.Empty)"
-                        @onclick="() => SetStatus(status)">
-                    @status
+        <section class="dashboard-shell" data-testid="orders-section">
+            <div class="dashboard-topbar">
+                <div class="search-field">
+                    <input @bind="searchTerm" @bind:event="oninput" placeholder="Rechercher..." data-testid="search-input" />
+                </div>
+
+                <select class="filter-select" @bind="sourceFilter" data-testid="source-filter">
+                    <option value="">Toutes les sources</option>
+                    <option value="Manual">Manuel</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="GoogleSheets">Google Sheets</option>
+                    <option value="Shopify">Shopify</option>
+                    <option value="WooCommerce">WooCommerce</option>
+                </select>
+                
+                <select class="filter-select" @bind="wilayaFilter" data-testid="wilaya-filter">
+                    <option value="">Toutes les wilayas</option>
+                    @foreach (var wilaya in wilayas.Take(20))
+                    {
+                        <option value="@wilaya.Name">@wilaya.Name</option>
+                    }
+                </select>
+
+                <button type="button" class="btn btn-primary create-order-btn" @onclick="ShowCreateModal" data-testid="create-order-btn">
+                    + Nouvelle commande
                 </button>
-            }
-        </div>
-
-        <div class="dashboard-controls">
-            <select class="control-select">
-                <option>5</option>
-                <option>10</option>
-                <option>20</option>
-            </select>
-
-            <select class="control-select wide">
-                <option>Du plus récent au plus ancien</option>
-                <option>Du plus ancien au plus récent</option>
-            </select>
-
-            <button type="button" class="btn btn-primary create-order-btn">+ Create Order</button>
-        </div>
-
-        <div class="orders-table" role="table" aria-label="Order management dashboard">
-            <div class="orders-header" role="row">
-                <div>Client</div>
-                <div>Produits</div>
-                <div>Total</div>
-                <div>Remarque</div>
-                <div>Employé</div>
-                <div>Mode de livraison</div>
-                <div>Statut</div>
             </div>
 
-            @foreach (var order in VisibleOrders)
-            {
-                <article class="order-row" role="row">
-                    <div class="client-cell">
-                        <span class="source-badge @order.SourceClass">@order.Source</span>
-                        <div class="client-meta">
-                            <strong>@order.OrderNumber</strong>
-                            <span>@order.Date</span>
-                            <span>@order.Customer</span>
-                            <span>@order.Wilaya</span>
-                            <span>@order.Phone</span>
-                        </div>
-                    </div>
+            <div class="status-filter-row" data-testid="status-filters">
+                @foreach (var status in StatusFilters)
+                {
+                    <button type="button"
+                            class="status-filter @(selectedStatus == status.Key ? "status-filter--active" : string.Empty)"
+                            @onclick="() => SetStatus(status.Key)"
+                            data-testid="status-filter-@status.Key.ToLower()">
+                        @status.Value
+                    </button>
+                }
+            </div>
 
-                    <div class="products-cell">
-                        @foreach (var product in order.Products)
-                        {
-                            <span>@product</span>
-                        }
-                    </div>
+            <div class="orders-table" role="table" aria-label="Tableau des commandes" data-testid="orders-table">
+                <div class="orders-header" role="row">
+                    <div>Client</div>
+                    <div>Produits</div>
+                    <div>Total</div>
+                    <div>Remarque</div>
+                    <div>Wilaya</div>
+                    <div>Source</div>
+                    <div>Statut</div>
+                </div>
 
-                    <div class="total-cell">
-                        <strong>@order.Total</strong>
-                        <span>@order.Quantity</span>
-                        <span>@order.ShippingCost</span>
-                    </div>
+                @if (isLoading)
+                {
+                    <div class="loading-state">Chargement...</div>
+                }
+                else if (!VisibleOrders.Any())
+                {
+                    <div class="empty-state" data-testid="empty-state">Aucune commande trouvée</div>
+                }
+                else
+                {
+                    @foreach (var order in VisibleOrders)
+                    {
+                        <article class="order-row" role="row" data-testid="order-row-@order.OrderNumber">
+                            <div class="client-cell">
+                                <div class="client-meta">
+                                    <strong>@order.OrderNumber</strong>
+                                    <span>@order.CreatedAtUtc.ToString("dd/MM/yyyy HH:mm")</span>
+                                    <span>@order.CustomerName</span>
+                                    <span>@order.PhoneNumber</span>
+                                </div>
+                            </div>
 
-                    <div class="note-cell">
-                        <div class="note-tab-row">
-                            <span class="note-tab note-tab--active">Remarque</span>
-                            <span class="note-tab">Expédition</span>
-                        </div>
-                        <div class="note-box">@order.Note</div>
-                    </div>
+                            <div class="products-cell">
+                                <span>Voir détails</span>
+                            </div>
 
-                    <div class="employee-cell">
-                        <span>@order.Employee</span>
-                    </div>
+                            <div class="total-cell">
+                                <strong>@order.Subtotal.ToString("N0") DA</strong>
+                            </div>
 
-                    <div class="delivery-cell">
-                        <span class="delivery-pill delivery-pill--main">@order.DeliveryZone</span>
-                        <span class="delivery-pill delivery-pill--secondary">@order.DeliveryType</span>
-                    </div>
+                            <div class="note-cell">
+                                <div class="note-box">-</div>
+                            </div>
 
-                    <div class="status-cell">
-                        <span class="status-pill @order.StatusClass">@order.Status</span>
-                        <button type="button" class="row-action-button">•••</button>
-                    </div>
-                </article>
-            }
-        </div>
-    </section>
+                            <div class="wilaya-cell">
+                                <span class="delivery-pill delivery-pill--main">@order.Wilaya</span>
+                            </div>
+
+                            <div class="source-cell">
+                                <span class="source-badge @GetSourceClass(order.Source)">@order.Source</span>
+                            </div>
+
+                            <div class="status-cell">
+                                <select class="status-select @GetStatusClass(order.Status)"
+                                        value="@order.Status"
+                                        @onchange="e => UpdateStatus(order.Id, e.Value?.ToString() ?? order.Status)"
+                                        data-testid="status-select-@order.OrderNumber">
+                                    <option value="Pending">En attente</option>
+                                    <option value="CalledNoAnswer">Pas de réponse</option>
+                                    <option value="Confirmed">Confirmé</option>
+                                    <option value="Reprogrammed">Reprogrammé</option>
+                                    <option value="Shipped">Expédié</option>
+                                    <option value="Delivered">Livré</option>
+                                    <option value="Returned">Retourné</option>
+                                    <option value="Cancelled">Annulé</option>
+                                </select>
+                            </div>
+                        </article>
+                    }
+                }
+            </div>
+        </section>
+    }
 </div>
 
+<!-- Create Order Modal -->
+@if (showCreateModal)
+{
+    <div class="modal-overlay" @onclick="HideCreateModal">
+        <div class="modal-content" @onclick:stopPropagation="true" data-testid="create-order-modal">
+            <h2>Nouvelle commande</h2>
+            
+            <div class="form-grid">
+                <label>
+                    <span>Nom du client *</span>
+                    <input @bind="newOrder.CustomerName" placeholder="Nom complet" data-testid="new-order-customer" />
+                </label>
+                
+                <label>
+                    <span>Téléphone *</span>
+                    <input @bind="newOrder.PhoneNumber" placeholder="0556000000" data-testid="new-order-phone" />
+                </label>
+                
+                <label>
+                    <span>Wilaya *</span>
+                    <select @bind="newOrder.Wilaya" class="control-select" data-testid="new-order-wilaya">
+                        <option value="">Sélectionner...</option>
+                        @foreach (var wilaya in wilayas)
+                        {
+                            <option value="@wilaya.Name">@wilaya.Code - @wilaya.Name</option>
+                        }
+                    </select>
+                </label>
+                
+                <label>
+                    <span>Commune *</span>
+                    <input @bind="newOrder.Commune" placeholder="Commune" data-testid="new-order-commune" />
+                </label>
+                
+                <label class="full-width">
+                    <span>Adresse de livraison *</span>
+                    <input @bind="newOrder.DeliveryAddress" placeholder="Adresse complète" data-testid="new-order-address" />
+                </label>
+                
+                <label>
+                    <span>Produit *</span>
+                    <input @bind="newOrder.ProductName" placeholder="Nom du produit" data-testid="new-order-product" />
+                </label>
+                
+                <label>
+                    <span>Quantité</span>
+                    <input type="number" @bind="newOrder.Quantity" min="1" data-testid="new-order-quantity" />
+                </label>
+                
+                <label>
+                    <span>Prix unitaire (DA)</span>
+                    <input type="number" @bind="newOrder.UnitPrice" min="0" data-testid="new-order-price" />
+                </label>
+                
+                <label class="full-width">
+                    <span>Note</span>
+                    <input @bind="newOrder.Note" placeholder="Note pour l'agent..." data-testid="new-order-note" />
+                </label>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="HideCreateModal">Annuler</button>
+                <button class="btn btn-primary" @onclick="CreateOrder" disabled="@isCreating" data-testid="submit-order-btn">
+                    @(isCreating ? "Création..." : "Créer la commande")
+                </button>
+            </div>
+            
+            @if (!string.IsNullOrEmpty(createError))
+            {
+                <p class="error-message">@createError</p>
+            }
+        </div>
+    </div>
+}
+
+<style>
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1.25rem;
+        border-radius: 20px;
+        background: rgba(10, 16, 30, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(16px);
+    }
+    
+    .stat-label {
+        display: block;
+        font-size: 0.85rem;
+        color: rgba(238, 243, 255, 0.6);
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        display: block;
+    }
+    
+    .stat-card--pending .stat-value { color: #dcb8ff; }
+    .stat-card--confirmed .stat-value { color: #98efbb; }
+    .stat-card--shipped .stat-value { color: #a8dcff; }
+    .stat-card--delivered .stat-value { color: #63f7c0; }
+    
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #eaf0ff;
+        min-height: 3rem;
+    }
+    
+    .status-select {
+        padding: 0.5rem 0.75rem;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    
+    .status-select.status--pending { background: rgba(169, 92, 255, 0.2); color: #dcb8ff; }
+    .status-select.status--confirmed { background: rgba(60, 200, 130, 0.2); color: #98efbb; }
+    .status-select.status--shipped { background: rgba(54, 163, 255, 0.2); color: #a8dcff; }
+    .status-select.status--delivered { background: rgba(99, 247, 192, 0.2); color: #63f7c0; }
+    .status-select.status--returned { background: rgba(255, 107, 107, 0.2); color: #ff9999; }
+    .status-select.status--cancelled { background: rgba(128, 128, 128, 0.2); color: #999; }
+    
+    .source-badge--whatsapp { background: linear-gradient(135deg, #25d366, #128c7e); }
+    .source-badge--facebook { background: linear-gradient(135deg, #1877f2, #0d65d9); }
+    .source-badge--instagram { background: linear-gradient(135deg, #e4405f, #c13584); }
+    .source-badge--googlesheets { background: linear-gradient(135deg, #34a853, #0f9d58); }
+    
+    .loading-state, .empty-state {
+        padding: 3rem;
+        text-align: center;
+        color: rgba(238, 243, 255, 0.6);
+    }
+    
+    .auth-required {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    
+    .modal-content {
+        background: #0b1221;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 2rem;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-content h2 {
+        margin: 0 0 1.5rem;
+        color: #eef3ff;
+    }
+    
+    .modal-content .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .modal-content .full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .modal-content label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-content label span {
+        color: #d6e1ff;
+        font-size: 0.9rem;
+    }
+    
+    .modal-content input, .modal-content select {
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+    }
+    
+    .error-message {
+        color: #ff6b6b;
+        margin-top: 1rem;
+    }
+    
+    @@media (max-width: 900px) {
+        .stats-row {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .modal-content .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @@media (max-width: 600px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
 @code {
-    private readonly string[] StatusFilters =
-    [
-        "Tout",
-        "En attente",
-        "A rappeler",
-        "Tentative 1",
-        "Tentative 2",
-        "Tentative 3",
-        "Reprogrammé",
-        "Confirmé",
-        "Expédié",
-        "Livré"
-    ];
-
-    private string selectedStatus = "Tout";
-
-    private string searchTerm = string.Empty;
-
-    private readonly List<OrderRow> Orders =
-    [
-        new(
-            "Shopify",
-            "#83041",
-            "24-10-2025 22:49",
-            "Wassel test",
-            ["Wassel Product"],
-            "2500 DA",
-            "1 x 2500",
-            "0 DA",
-            "Note for the manager",
-            "test",
-            "Alger Centre",
-            "0556000010",
-            "ZR",
-            "Stop desk",
-            "En attente",
-            "source-badge--shopify",
-            "status-pill--pending"
-        ),
-        new(
-            "WooCommerce",
-            "#73460",
-            "15-10-2025 22:33",
-            "Wassel test",
-            ["Arabic text - Quantity"],
-            "3700 DA",
-            "1 x 3500",
-            "0 DA",
-            "Caller tried twice",
-            "agent 02",
-            "Oran",
-            "0556001020",
-            "ZR",
-            "Home delivery",
-            "Confirmé",
-            "source-badge--woo",
-            "status-pill--confirm"
-        ),
-        new(
-            "Manual",
-            "#11209",
-            "14-10-2025 10:10",
-            "Nadia B.",
-            ["T-shirt", "Cap"],
-            "1800 DA",
-            "2 items",
-            "300 DA",
-            "Call after Maghrib",
-            "agent 03",
-            "Blida",
-            "0556002030",
-            "ZR",
-            "Office pickup",
-            "A rappeler",
-            "source-badge--manual",
-            "status-pill--callback"
-        ),
-        new(
-            "Shopify",
-            "#54111",
-            "12-10-2025 18:05",
-            "Yassine M.",
-            ["Shoes"],
-            "6400 DA",
-            "1 x 6400",
-            "0 DA",
-            "Client confirmed yesterday",
-            "agent 01",
-            "Constantine",
-            "0556003040",
-            "ZR",
-            "Warehouse delivery",
-            "Expédié",
-            "source-badge--shopify",
-            "status-pill--ship"
-        )
-    ];
-
-    private IEnumerable<OrderRow> VisibleOrders => Orders.Where(order =>
-        (selectedStatus == "Tout" || order.Status == selectedStatus) &&
-        (
-            string.IsNullOrWhiteSpace(searchTerm) ||
-            order.OrderNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-            order.Customer.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-            order.Wilaya.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-            order.Source.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
-        ));
-
-    private void SetStatus(string status)
+    private static readonly Dictionary<string, string> StatusFilters = new()
     {
-        selectedStatus = status;
+        { "", "Tout" },
+        { "Pending", "En attente" },
+        { "CalledNoAnswer", "Pas de réponse" },
+        { "Confirmed", "Confirmé" },
+        { "Shipped", "Expédié" },
+        { "Delivered", "Livré" },
+        { "Returned", "Retourné" }
+    };
+
+    private string selectedStatus = "";
+    private string searchTerm = "";
+    private string sourceFilter = "";
+    private string wilayaFilter = "";
+    private bool isLoading = true;
+    private bool showCreateModal;
+    private bool isCreating;
+    private string? createError;
+
+    private List<OrderListItem> orders = [];
+    private List<WilayaDto> wilayas = [];
+    private DashboardStats? stats;
+    private NewOrderModel newOrder = new();
+
+    private IEnumerable<OrderListItem> VisibleOrders => orders.Where(order =>
+        (string.IsNullOrEmpty(selectedStatus) || order.Status == selectedStatus) &&
+        (string.IsNullOrEmpty(sourceFilter) || order.Source == sourceFilter) &&
+        (string.IsNullOrEmpty(wilayaFilter) || order.Wilaya == wilayaFilter) &&
+        (string.IsNullOrWhiteSpace(searchTerm) ||
+            order.OrderNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            order.CustomerName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            order.PhoneNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthService.IsAuthenticated)
+        {
+            await LoadData();
+        }
+        isLoading = false;
     }
 
-    private sealed record OrderRow(
-        string Source,
-        string OrderNumber,
-        string Date,
-        string Customer,
-        IReadOnlyList<string> Products,
-        string Total,
-        string Quantity,
-        string ShippingCost,
-        string Note,
-        string Employee,
-        string Wilaya,
-        string Phone,
-        string DeliveryZone,
-        string DeliveryType,
-        string Status,
-        string SourceClass,
-        string StatusClass);
+    private async Task LoadData()
+    {
+        try
+        {
+            var ordersTask = ApiService.GetOrdersAsync();
+            var statsTask = ApiService.GetDashboardStatsAsync();
+            var wilayasTask = ApiService.GetWilayasAsync();
+
+            await Task.WhenAll(ordersTask, statsTask, wilayasTask);
+
+            orders = await ordersTask;
+            stats = await statsTask;
+            wilayas = await wilayasTask;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+    }
+
+    private void SetStatus(string status) => selectedStatus = status;
+
+    private void ShowCreateModal()
+    {
+        newOrder = new NewOrderModel();
+        createError = null;
+        showCreateModal = true;
+    }
+
+    private void HideCreateModal() => showCreateModal = false;
+
+    private async Task CreateOrder()
+    {
+        createError = null;
+        
+        if (string.IsNullOrWhiteSpace(newOrder.CustomerName) ||
+            string.IsNullOrWhiteSpace(newOrder.PhoneNumber) ||
+            string.IsNullOrWhiteSpace(newOrder.Wilaya) ||
+            string.IsNullOrWhiteSpace(newOrder.DeliveryAddress) ||
+            string.IsNullOrWhiteSpace(newOrder.ProductName))
+        {
+            createError = "Veuillez remplir tous les champs obligatoires.";
+            return;
+        }
+
+        isCreating = true;
+
+        var request = new CreateOrderRequest(
+            $"#{Random.Shared.Next(10000, 99999)}",
+            "Manual",
+            newOrder.CustomerName,
+            newOrder.PhoneNumber,
+            newOrder.Wilaya,
+            newOrder.Commune ?? $"{newOrder.Wilaya} Centre",
+            newOrder.DeliveryAddress,
+            [new CreateOrderItemRequest(newOrder.ProductName, newOrder.Quantity, newOrder.UnitPrice)],
+            newOrder.Note
+        );
+
+        var id = await ApiService.CreateOrderAsync(request);
+
+        isCreating = false;
+
+        if (id.HasValue)
+        {
+            showCreateModal = false;
+            await LoadData();
+        }
+        else
+        {
+            createError = "Erreur lors de la création de la commande.";
+        }
+    }
+
+    private async Task UpdateStatus(Guid orderId, string newStatus)
+    {
+        await ApiService.UpdateOrderStatusAsync(orderId, newStatus);
+        await LoadData();
+    }
+
+    private static string GetSourceClass(string source) => source.ToLower() switch
+    {
+        "whatsapp" => "source-badge--whatsapp",
+        "facebook" => "source-badge--facebook",
+        "instagram" => "source-badge--instagram",
+        "googlesheets" => "source-badge--googlesheets",
+        "shopify" => "source-badge--shopify",
+        "woocommerce" => "source-badge--woo",
+        _ => "source-badge--manual"
+    };
+
+    private static string GetStatusClass(string status) => status switch
+    {
+        "Pending" => "status--pending",
+        "CalledNoAnswer" => "status--pending",
+        "Confirmed" => "status--confirmed",
+        "Shipped" => "status--shipped",
+        "Delivered" => "status--delivered",
+        "Returned" => "status--returned",
+        "Cancelled" => "status--cancelled",
+        _ => ""
+    };
+
+    private class NewOrderModel
+    {
+        public string CustomerName { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+        public string Wilaya { get; set; } = "";
+        public string? Commune { get; set; }
+        public string DeliveryAddress { get; set; } = "";
+        public string ProductName { get; set; } = "";
+        public int Quantity { get; set; } = 1;
+        public decimal UnitPrice { get; set; }
+        public string? Note { get; set; }
+    }
 }

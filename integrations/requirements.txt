@@ -1,0 +1,30 @@
+# Wassel Integrations Requirements
+# Python scripts for external API integrations
+
+# HTTP requests
+requests>=2.31.0
+httpx>=0.26.0
+
+# Google Sheets API
+google-api-python-client>=2.111.0
+google-auth-httplib2>=0.2.0
+google-auth-oauthlib>=1.2.0
+
+# Facebook/Meta Graph API
+facebook-sdk>=3.1.0
+
+# WhatsApp Business API (via official cloud API)
+# No specific library needed - uses REST API
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Data processing
+pandas>=2.1.4
+
+# Async support
+aiohttp>=3.9.1
+
+# Scheduling
+schedule>=1.2.1
+apscheduler>=3.10.4

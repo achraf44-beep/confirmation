@@ -1,69 +1,146 @@
 @page "/login"
 
 @inject NavigationManager Navigation
+@inject Client.Services.AuthService AuthService
 
-<PageTitle>Wassel | Login</PageTitle>
+<PageTitle>Wassel | Connexion</PageTitle>
 
 <div class="auth-page">
-    <section class="auth-card">
-        <p class="eyebrow">MVP access</p>
-        <h1>Simple login for the confirmation team</h1>
+    <section class="auth-card" data-testid="login-card">
+        <p class="eyebrow">Plateforme de gestion</p>
+        <h1>Connectez-vous à Wassel</h1>
         <p>
-            This first version uses a lightweight login screen so the product flow can be tested
-            before real authentication is wired in.
+            Gérez vos commandes e-commerce depuis un tableau de bord centralisé.
+            Confirmez, expédiez et suivez vos livraisons.
         </p>
 
         <div class="form-grid">
             <label>
                 <span>Email</span>
-                <input @bind="email" autocomplete="email" placeholder="agent@wassel.dz" />
+                <input @bind="email" 
+                       type="email"
+                       autocomplete="email" 
+                       placeholder="agent@wassel.dz"
+                       data-testid="login-email-input" />
             </label>
 
             <label>
-                <span>Password</span>
-                <input @bind="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+                <span>Mot de passe</span>
+                <input @bind="password" 
+                       type="password" 
+                       autocomplete="current-password" 
+                       placeholder="••••••••"
+                       data-testid="login-password-input" />
             </label>
         </div>
 
         <div class="auth-actions">
-            <button type="button" class="btn btn-primary btn-lg" @onclick="SignIn">Login</button>
-            <NavLink class="btn btn-secondary btn-lg" href="/dashboard">Skip to dashboard</NavLink>
+            <button type="button" 
+                    class="btn btn-primary btn-lg" 
+                    @onclick="SignIn"
+                    disabled="@isLoading"
+                    data-testid="login-submit-btn">
+                @if (isLoading)
+                {
+                    <span>Connexion...</span>
+                }
+                else
+                {
+                    <span>Se connecter</span>
+                }
+            </button>
+            <NavLink class="btn btn-secondary btn-lg" href="/register" data-testid="register-link">Créer un compte</NavLink>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(message))
         {
-            <p class="form-note">@message</p>
+            <p class="form-note @(isError ? "error" : "")" data-testid="login-message">@message</p>
         }
+        
+        <div class="demo-credentials">
+            <p class="eyebrow">Comptes de démonstration</p>
+            <div class="credentials-list">
+                <div class="credential-item">
+                    <strong>Admin:</strong> admin@wassel.dz / Admin123!
+                </div>
+                <div class="credential-item">
+                    <strong>Agent:</strong> agent@wassel.dz / Agent123!
+                </div>
+            </div>
+        </div>
     </section>
 
     <aside class="auth-aside">
         <div class="callout-card">
-            <p class="eyebrow">What this unlocks</p>
-            <h2>One workspace for COD operations</h2>
+            <p class="eyebrow">Ce que vous pouvez faire</p>
+            <h2>Centralisez vos opérations COD</h2>
             <ul>
-                <li>Track orders by source and status</li>
-                <li>Move between pending, confirmed, and shipped states</li>
-                <li>Prepare the dashboard for future delivery integrations</li>
+                <li>Suivez les commandes par source (Facebook, WhatsApp, etc.)</li>
+                <li>Gérez les statuts: En attente → Confirmé → Expédié → Livré</li>
+                <li>Choisissez parmi Yalidine, ZR Express, Maystro, EcoTrack</li>
+                <li>Gérez vos clients et votre inventaire</li>
             </ul>
         </div>
     </aside>
 </div>
 
+<style>
+    .demo-credentials {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: rgba(140, 77, 255, 0.1);
+        border-radius: 12px;
+        border: 1px solid rgba(140, 77, 255, 0.2);
+    }
+    
+    .credentials-list {
+        display: grid;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .credential-item {
+        font-size: 0.9rem;
+        color: rgba(238, 243, 255, 0.8);
+    }
+    
+    .form-note.error {
+        color: #ff6b6b;
+    }
+</style>
+
 @code {
     private string email = string.Empty;
-
     private string password = string.Empty;
-
     private string? message;
+    private bool isLoading;
+    private bool isError;
 
-    private void SignIn()
+    private async Task SignIn()
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
-            message = "Enter a demo email and password to continue.";
+            message = "Veuillez entrer votre email et mot de passe.";
+            isError = true;
             return;
         }
 
-        Navigation.NavigateTo("/dashboard");
+        isLoading = true;
+        isError = false;
+        message = null;
+        
+        var result = await AuthService.LoginAsync(email, password);
+        
+        isLoading = false;
+        
+        if (result.Success)
+        {
+            Navigation.NavigateTo("/dashboard");
+        }
+        else
+        {
+            message = result.Error ?? "Erreur de connexion. Vérifiez vos identifiants.";
+            isError = true;
+        }
     }
 }

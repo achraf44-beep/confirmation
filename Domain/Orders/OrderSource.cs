@@ -7,5 +7,6 @@ public enum OrderSource
     Instagram = 2,
     Shopify = 3,
     WooCommerce = 4,
-    GoogleSheets = 5
+    GoogleSheets = 5,
+    WhatsApp = 6
 }

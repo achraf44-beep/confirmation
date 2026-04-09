@@ -1,0 +1,157 @@
+@page "/register"
+
+@inject NavigationManager Navigation
+@inject Client.Services.AuthService AuthService
+
+<PageTitle>Wassel | Inscription</PageTitle>
+
+<div class="auth-page">
+    <section class="auth-card" data-testid="register-card">
+        <p class="eyebrow">Nouveau compte</p>
+        <h1>Rejoignez Wassel</h1>
+        <p>
+            Créez votre compte pour commencer à gérer vos commandes e-commerce.
+        </p>
+
+        <div class="form-grid">
+            <label>
+                <span>Email</span>
+                <input @bind="email" 
+                       type="email"
+                       autocomplete="email" 
+                       placeholder="votre@email.dz"
+                       data-testid="register-email-input" />
+            </label>
+
+            <label>
+                <span>Mot de passe</span>
+                <input @bind="password" 
+                       type="password" 
+                       autocomplete="new-password" 
+                       placeholder="Min. 8 caractères"
+                       data-testid="register-password-input" />
+            </label>
+            
+            <label>
+                <span>Confirmer le mot de passe</span>
+                <input @bind="confirmPassword" 
+                       type="password" 
+                       autocomplete="new-password" 
+                       placeholder="Confirmez votre mot de passe"
+                       data-testid="register-confirm-password-input" />
+            </label>
+            
+            <label>
+                <span>Rôle</span>
+                <select @bind="role" class="control-select" data-testid="register-role-select">
+                    <option value="Agent">Agent de confirmation</option>
+                    <option value="DeliveryCoordinator">Coordinateur livraison</option>
+                    <option value="Owner">Propriétaire</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="auth-actions">
+            <button type="button" 
+                    class="btn btn-primary btn-lg" 
+                    @onclick="Register"
+                    disabled="@isLoading"
+                    data-testid="register-submit-btn">
+                @if (isLoading)
+                {
+                    <span>Création...</span>
+                }
+                else
+                {
+                    <span>Créer mon compte</span>
+                }
+            </button>
+            <NavLink class="btn btn-secondary btn-lg" href="/login" data-testid="login-link">Déjà inscrit?</NavLink>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <p class="form-note @(isError ? "error" : "")" data-testid="register-message">@message</p>
+        }
+    </section>
+
+    <aside class="auth-aside">
+        <div class="callout-card">
+            <p class="eyebrow">Rôles disponibles</p>
+            <h2>Choisissez votre profil</h2>
+            <ul>
+                <li><strong>Agent:</strong> Confirme les commandes et contacte les clients</li>
+                <li><strong>Coordinateur:</strong> Gère les expéditions et suit les livraisons</li>
+                <li><strong>Propriétaire:</strong> Accès complet à toutes les fonctionnalités</li>
+            </ul>
+        </div>
+    </aside>
+</div>
+
+<style>
+    .form-note.error {
+        color: #ff6b6b;
+    }
+    
+    .control-select {
+        width: 100%;
+        padding: 0.95rem 1rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        color: #ffffff;
+    }
+</style>
+
+@code {
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string confirmPassword = string.Empty;
+    private string role = "Agent";
+    private string? message;
+    private bool isLoading;
+    private bool isError;
+
+    private async Task Register()
+    {
+        isError = false;
+        message = null;
+        
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            message = "Veuillez remplir tous les champs.";
+            isError = true;
+            return;
+        }
+        
+        if (password != confirmPassword)
+        {
+            message = "Les mots de passe ne correspondent pas.";
+            isError = true;
+            return;
+        }
+        
+        if (password.Length < 6)
+        {
+            message = "Le mot de passe doit contenir au moins 6 caractères.";
+            isError = true;
+            return;
+        }
+
+        isLoading = true;
+        
+        var result = await AuthService.RegisterAsync(email, password, role);
+        
+        isLoading = false;
+        
+        if (result.Success)
+        {
+            Navigation.NavigateTo("/dashboard");
+        }
+        else
+        {
+            message = result.Error ?? "Erreur lors de la création du compte.";
+            isError = true;
+        }
+    }
+}

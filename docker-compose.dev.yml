@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: wassel-sqlserver-dev
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Wassel@Dev2024!
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data_dev:/var/opt/mssql
+    networks:
+      - wassel-network-dev
+
+networks:
+  wassel-network-dev:
+    driver: bridge
+
+volumes:
+  sqlserver_data_dev:

@@ -1,0 +1,344 @@
+@page "/customers"
+
+@inject Client.Services.ApiService ApiService
+@inject Client.Services.AuthService AuthService
+
+<PageTitle>Wassel | Clients</PageTitle>
+
+<div class="page-container" data-testid="customers-page">
+    @if (!AuthService.IsAuthenticated)
+    {
+        <div class="auth-required">
+            <p>Veuillez vous connecter pour accéder aux clients.</p>
+            <NavLink class="btn btn-primary" href="/login">Se connecter</NavLink>
+        </div>
+    }
+    else
+    {
+        <div class="page-header">
+            <h1>Clients</h1>
+            <button class="btn btn-primary" @onclick="ShowCreateModal" data-testid="add-customer-btn">
+                + Nouveau client
+            </button>
+        </div>
+        
+        <div class="search-bar">
+            <input @bind="searchTerm" @bind:event="oninput" placeholder="Rechercher par nom ou téléphone..." data-testid="customer-search" />
+        </div>
+        
+        <div class="data-table" data-testid="customers-table">
+            <div class="table-header">
+                <div>Nom</div>
+                <div>Téléphone</div>
+                <div>Email</div>
+                <div>Wilaya</div>
+                <div>Commandes</div>
+                <div>Total dépensé</div>
+            </div>
+            
+            @if (isLoading)
+            {
+                <div class="loading-state">Chargement...</div>
+            }
+            else if (!FilteredCustomers.Any())
+            {
+                <div class="empty-state">Aucun client trouvé</div>
+            }
+            else
+            {
+                @foreach (var customer in FilteredCustomers)
+                {
+                    <div class="table-row" data-testid="customer-row-@customer.PhoneNumber">
+                        <div class="cell-name">
+                            <strong>@customer.Name</strong>
+                            <span class="cell-secondary">@customer.Address</span>
+                        </div>
+                        <div>@customer.PhoneNumber</div>
+                        <div>@(customer.Email ?? "-")</div>
+                        <div>
+                            <span class="wilaya-badge">@customer.Wilaya</span>
+                        </div>
+                        <div>@customer.TotalOrders</div>
+                        <div class="cell-amount">@customer.TotalSpent.ToString("N0") DA</div>
+                    </div>
+                }
+            }
+        </div>
+    }
+</div>
+
+@if (showCreateModal)
+{
+    <div class="modal-overlay" @onclick="HideModal">
+        <div class="modal-content" @onclick:stopPropagation="true" data-testid="create-customer-modal">
+            <h2>Nouveau client</h2>
+            
+            <div class="form-grid">
+                <label>
+                    <span>Nom complet *</span>
+                    <input @bind="newCustomer.Name" placeholder="Nom et prénom" />
+                </label>
+                
+                <label>
+                    <span>Téléphone *</span>
+                    <input @bind="newCustomer.PhoneNumber" placeholder="0556000000" />
+                </label>
+                
+                <label>
+                    <span>Email</span>
+                    <input @bind="newCustomer.Email" type="email" placeholder="email@example.com" />
+                </label>
+                
+                <label>
+                    <span>Wilaya *</span>
+                    <select @bind="newCustomer.Wilaya" class="control-select">
+                        <option value="">Sélectionner...</option>
+                        @foreach (var wilaya in wilayas)
+                        {
+                            <option value="@wilaya.Name">@wilaya.Code - @wilaya.Name</option>
+                        }
+                    </select>
+                </label>
+                
+                <label>
+                    <span>Commune *</span>
+                    <input @bind="newCustomer.Commune" placeholder="Commune" />
+                </label>
+                
+                <label class="full-width">
+                    <span>Adresse *</span>
+                    <input @bind="newCustomer.Address" placeholder="Adresse complète" />
+                </label>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="HideModal">Annuler</button>
+                <button class="btn btn-primary" @onclick="CreateCustomer" disabled="@isCreating">
+                    @(isCreating ? "Création..." : "Créer")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .page-container {
+        padding: 1rem;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+    }
+    
+    .search-bar {
+        margin-bottom: 1rem;
+    }
+    
+    .search-bar input {
+        width: 100%;
+        max-width: 400px;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    
+    .data-table {
+        background: rgba(10, 16, 30, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        overflow: hidden;
+    }
+    
+    .table-header {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1.2fr 1fr 0.8fr 1fr;
+        padding: 1rem 1.25rem;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(238, 243, 255, 0.6);
+        font-size: 0.9rem;
+    }
+    
+    .table-row {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1.2fr 1fr 0.8fr 1fr;
+        padding: 1rem 1.25rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        align-items: center;
+    }
+    
+    .cell-name strong {
+        display: block;
+    }
+    
+    .cell-secondary {
+        font-size: 0.85rem;
+        color: rgba(238, 243, 255, 0.5);
+    }
+    
+    .cell-amount {
+        color: #63f7c0;
+        font-weight: 600;
+    }
+    
+    .wilaya-badge {
+        padding: 0.35rem 0.75rem;
+        background: linear-gradient(135deg, #34c56a, #1fa8b6);
+        border-radius: 999px;
+        font-size: 0.85rem;
+    }
+    
+    .loading-state, .empty-state, .auth-required {
+        padding: 3rem;
+        text-align: center;
+        color: rgba(238, 243, 255, 0.6);
+    }
+    
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    
+    .modal-content {
+        background: #0b1221;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+    }
+    
+    .modal-content h2 {
+        margin: 0 0 1.5rem;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .full-width { grid-column: 1 / -1; }
+    
+    .form-grid label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-grid label span {
+        color: #d6e1ff;
+        font-size: 0.9rem;
+    }
+    
+    .form-grid input, .form-grid select {
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+    }
+</style>
+
+@code {
+    private List<CustomerDto> customers = [];
+    private List<WilayaDto> wilayas = [];
+    private string searchTerm = "";
+    private bool isLoading = true;
+    private bool showCreateModal;
+    private bool isCreating;
+    private NewCustomerModel newCustomer = new();
+    
+    private IEnumerable<CustomerDto> FilteredCustomers => customers.Where(c =>
+        string.IsNullOrWhiteSpace(searchTerm) ||
+        c.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        c.PhoneNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthService.IsAuthenticated)
+        {
+            await LoadData();
+        }
+        isLoading = false;
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            customers = await ApiService.GetCustomersAsync();
+            wilayas = await ApiService.GetWilayasAsync();
+        }
+        catch { }
+    }
+
+    private void ShowCreateModal()
+    {
+        newCustomer = new();
+        showCreateModal = true;
+    }
+
+    private void HideModal() => showCreateModal = false;
+
+    private async Task CreateCustomer()
+    {
+        if (string.IsNullOrWhiteSpace(newCustomer.Name) ||
+            string.IsNullOrWhiteSpace(newCustomer.PhoneNumber) ||
+            string.IsNullOrWhiteSpace(newCustomer.Wilaya) ||
+            string.IsNullOrWhiteSpace(newCustomer.Address))
+            return;
+
+        isCreating = true;
+        
+        var request = new CreateCustomerRequest(
+            newCustomer.Name,
+            newCustomer.PhoneNumber,
+            newCustomer.Wilaya,
+            newCustomer.Commune ?? $"{newCustomer.Wilaya} Centre",
+            newCustomer.Address,
+            newCustomer.Email
+        );
+
+        var id = await ApiService.CreateCustomerAsync(request);
+        
+        isCreating = false;
+        
+        if (id.HasValue)
+        {
+            showCreateModal = false;
+            await LoadData();
+        }
+    }
+
+    private class NewCustomerModel
+    {
+        public string Name { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+        public string? Email { get; set; }
+        public string Wilaya { get; set; } = "";
+        public string? Commune { get; set; }
+        public string Address { get; set; } = "";
+    }
+}

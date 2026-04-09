@@ -1,0 +1,388 @@
+@page "/products"
+
+@inject Client.Services.ApiService ApiService
+@inject Client.Services.AuthService AuthService
+
+<PageTitle>Wassel | Produits</PageTitle>
+
+<div class="page-container" data-testid="products-page">
+    @if (!AuthService.IsAuthenticated)
+    {
+        <div class="auth-required">
+            <p>Veuillez vous connecter pour accéder aux produits.</p>
+            <NavLink class="btn btn-primary" href="/login">Se connecter</NavLink>
+        </div>
+    }
+    else
+    {
+        <div class="page-header">
+            <h1>Produits</h1>
+            <button class="btn btn-primary" @onclick="ShowCreateModal" data-testid="add-product-btn">
+                + Nouveau produit
+            </button>
+        </div>
+        
+        <div class="search-bar">
+            <input @bind="searchTerm" @bind:event="oninput" placeholder="Rechercher par nom ou SKU..." data-testid="product-search" />
+        </div>
+        
+        <div class="products-grid" data-testid="products-grid">
+            @if (isLoading)
+            {
+                <div class="loading-state">Chargement...</div>
+            }
+            else if (!FilteredProducts.Any())
+            {
+                <div class="empty-state">Aucun produit trouvé</div>
+            }
+            else
+            {
+                @foreach (var product in FilteredProducts)
+                {
+                    <div class="product-card @(!product.IsActive ? "product-card--inactive" : "")" data-testid="product-card-@product.Sku">
+                        <div class="product-header">
+                            <h3>@product.Name</h3>
+                            @if (!string.IsNullOrEmpty(product.Sku))
+                            {
+                                <span class="sku-badge">@product.Sku</span>
+                            }
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(product.Description))
+                        {
+                            <p class="product-description">@product.Description</p>
+                        }
+                        
+                        <div class="product-details">
+                            <div class="product-price">
+                                <span class="price-label">Prix</span>
+                                <strong>@product.Price.ToString("N0") DA</strong>
+                            </div>
+                            <div class="product-stock @(product.StockQuantity < 10 ? "stock-low" : "")">
+                                <span class="stock-label">Stock</span>
+                                <strong>@product.StockQuantity</strong>
+                            </div>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(product.Category))
+                        {
+                            <span class="category-badge">@product.Category</span>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    }
+</div>
+
+@if (showCreateModal)
+{
+    <div class="modal-overlay" @onclick="HideModal">
+        <div class="modal-content" @onclick:stopPropagation="true" data-testid="create-product-modal">
+            <h2>Nouveau produit</h2>
+            
+            <div class="form-grid">
+                <label class="full-width">
+                    <span>Nom du produit *</span>
+                    <input @bind="newProduct.Name" placeholder="Nom du produit" />
+                </label>
+                
+                <label>
+                    <span>SKU</span>
+                    <input @bind="newProduct.Sku" placeholder="SKU-001" />
+                </label>
+                
+                <label>
+                    <span>Catégorie</span>
+                    <input @bind="newProduct.Category" placeholder="Vêtements, Électronique..." />
+                </label>
+                
+                <label>
+                    <span>Prix (DA) *</span>
+                    <input type="number" @bind="newProduct.Price" min="0" />
+                </label>
+                
+                <label>
+                    <span>Stock initial</span>
+                    <input type="number" @bind="newProduct.StockQuantity" min="0" />
+                </label>
+                
+                <label class="full-width">
+                    <span>Description</span>
+                    <textarea @bind="newProduct.Description" placeholder="Description du produit..."></textarea>
+                </label>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" @onclick="HideModal">Annuler</button>
+                <button class="btn btn-primary" @onclick="CreateProduct" disabled="@isCreating">
+                    @(isCreating ? "Création..." : "Créer")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .page-container {
+        padding: 1rem;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+    }
+    
+    .search-bar {
+        margin-bottom: 1.5rem;
+    }
+    
+    .search-bar input {
+        width: 100%;
+        max-width: 400px;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.25rem;
+    }
+    
+    .product-card {
+        background: rgba(10, 16, 30, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 1.25rem;
+        transition: border-color 0.2s;
+    }
+    
+    .product-card:hover {
+        border-color: rgba(140, 77, 255, 0.4);
+    }
+    
+    .product-card--inactive {
+        opacity: 0.5;
+    }
+    
+    .product-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .product-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    
+    .sku-badge {
+        padding: 0.25rem 0.6rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        font-size: 0.75rem;
+        color: rgba(238, 243, 255, 0.7);
+    }
+    
+    .product-description {
+        color: rgba(238, 243, 255, 0.6);
+        font-size: 0.9rem;
+        margin: 0 0 1rem;
+    }
+    
+    .product-details {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .product-price, .product-stock {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .price-label, .stock-label {
+        font-size: 0.8rem;
+        color: rgba(238, 243, 255, 0.5);
+    }
+    
+    .product-price strong {
+        color: #63f7c0;
+        font-size: 1.25rem;
+    }
+    
+    .product-stock strong {
+        font-size: 1.25rem;
+    }
+    
+    .stock-low strong {
+        color: #ff6b6b;
+    }
+    
+    .category-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        background: linear-gradient(135deg, #8c4dff, #b44df6);
+        border-radius: 999px;
+        font-size: 0.8rem;
+    }
+    
+    .loading-state, .empty-state, .auth-required {
+        grid-column: 1 / -1;
+        padding: 3rem;
+        text-align: center;
+        color: rgba(238, 243, 255, 0.6);
+    }
+    
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    
+    .modal-content {
+        background: #0b1221;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+    }
+    
+    .modal-content h2 {
+        margin: 0 0 1.5rem;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .full-width { grid-column: 1 / -1; }
+    
+    .form-grid label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-grid label span {
+        color: #d6e1ff;
+        font-size: 0.9rem;
+    }
+    
+    .form-grid input, .form-grid textarea {
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    
+    .form-grid textarea {
+        min-height: 80px;
+        resize: vertical;
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+    }
+</style>
+
+@code {
+    private List<ProductDto> products = [];
+    private string searchTerm = "";
+    private bool isLoading = true;
+    private bool showCreateModal;
+    private bool isCreating;
+    private NewProductModel newProduct = new();
+    
+    private IEnumerable<ProductDto> FilteredProducts => products.Where(p =>
+        string.IsNullOrWhiteSpace(searchTerm) ||
+        p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+        (p.Sku?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthService.IsAuthenticated)
+        {
+            await LoadData();
+        }
+        isLoading = false;
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            products = await ApiService.GetProductsAsync();
+        }
+        catch { }
+    }
+
+    private void ShowCreateModal()
+    {
+        newProduct = new();
+        showCreateModal = true;
+    }
+
+    private void HideModal() => showCreateModal = false;
+
+    private async Task CreateProduct()
+    {
+        if (string.IsNullOrWhiteSpace(newProduct.Name) || newProduct.Price <= 0)
+            return;
+
+        isCreating = true;
+        
+        var request = new CreateProductRequest(
+            newProduct.Name,
+            newProduct.Price,
+            newProduct.StockQuantity,
+            newProduct.Sku,
+            newProduct.Description,
+            newProduct.Category
+        );
+
+        var id = await ApiService.CreateProductAsync(request);
+        
+        isCreating = false;
+        
+        if (id.HasValue)
+        {
+            showCreateModal = false;
+            await LoadData();
+        }
+    }
+
+    private class NewProductModel
+    {
+        public string Name { get; set; } = "";
+        public string? Sku { get; set; }
+        public string? Description { get; set; }
+        public decimal Price { get; set; }
+        public int StockQuantity { get; set; }
+        public string? Category { get; set; }
+    }
+}

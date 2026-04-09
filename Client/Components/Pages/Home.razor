@@ -1,91 +1,231 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Wassel | COD Orders MVP</PageTitle>
+<PageTitle>Wassel | Gestion E-commerce Algérie</PageTitle>
 
-<div class="landing-page">
-	<section class="hero-panel">
-		<div class="hero-copy">
-			<p class="eyebrow">Algeria COD MVP</p>
-			<h1>Capture, confirm, and ship orders from one clean workspace.</h1>
-			<p class="hero-text">
-				Start with the core product experience: a simple landing page, a fast login entry point,
-				and a dashboard built around the confirmation workflow shown in your screenshot.
-			</p>
+<div class="landing-page" data-testid="landing-page">
+    <section class="hero-panel">
+        <div class="hero-copy">
+            <p class="eyebrow">Plateforme E-commerce Algérie</p>
+            <h1>Centralisez vos commandes. Confirmez. Expédiez.</h1>
+            <p class="hero-text">
+                Wassel unifie toutes vos sources de commandes - Facebook, WhatsApp, Instagram, 
+                Google Sheets - dans un tableau de bord unique optimisé pour le Cash on Delivery.
+            </p>
 
-			<div class="cta-row">
-				<NavLink class="btn btn-primary btn-lg" href="/login">Open login</NavLink>
-				<NavLink class="btn btn-secondary btn-lg" href="/dashboard">Preview dashboard</NavLink>
-			</div>
+            <div class="cta-row">
+                <NavLink class="btn btn-primary btn-lg" href="/login" data-testid="cta-login">Commencer maintenant</NavLink>
+                <NavLink class="btn btn-secondary btn-lg" href="/register" data-testid="cta-register">Créer un compte</NavLink>
+            </div>
 
-			<div class="feature-pills" aria-label="Product highlights">
-				<span>COD first</span>
-				<span>French UI</span>
-				<span>Dark dashboard</span>
-				<span>Mobile-ready</span>
-			</div>
-		</div>
+            <div class="feature-pills" aria-label="Fonctionnalités">
+                <span>COD First</span>
+                <span>58 Wilayas</span>
+                <span>Multi-sources</span>
+                <span>Français / عربي</span>
+            </div>
+        </div>
 
-		<aside class="preview-card">
-			<div class="preview-card__header">
-				<div>
-					<p class="eyebrow">MVP preview</p>
-					<h2>Operations dashboard</h2>
-				</div>
-				<span class="mini-chip">Live view</span>
-			</div>
+        <aside class="preview-card">
+            <div class="preview-card__header">
+                <div>
+                    <p class="eyebrow">Aperçu en direct</p>
+                    <h2>Dashboard opérationnel</h2>
+                </div>
+                <span class="mini-chip">Live</span>
+            </div>
 
-			<div class="preview-stats">
-				<div>
-					<strong>128</strong>
-					<span>orders today</span>
-				</div>
-				<div>
-					<strong>87%</strong>
-					<span>confirmed</span>
-				</div>
-				<div>
-					<strong>58</strong>
-					<span>wilayas</span>
-				</div>
-			</div>
+            <div class="preview-stats">
+                <div>
+                    <strong>128</strong>
+                    <span>commandes/jour</span>
+                </div>
+                <div>
+                    <strong>87%</strong>
+                    <span>confirmées</span>
+                </div>
+                <div>
+                    <strong>58</strong>
+                    <span>wilayas</span>
+                </div>
+            </div>
 
-			<div class="mini-board">
-				<div class="mini-board__row">
-					<span class="source-chip source-chip--shopify">Shopify</span>
-					<span>Order #83041</span>
-					<span class="status-chip status-chip--pending">En attente</span>
-				</div>
-				<div class="mini-board__row">
-					<span class="source-chip source-chip--woo">WooCommerce</span>
-					<span>Order #73460</span>
-					<span class="status-chip status-chip--confirm">Confirmé</span>
-				</div>
-				<div class="mini-board__row">
-					<span class="source-chip source-chip--manual">Manual</span>
-					<span>Order #11209</span>
-					<span class="status-chip status-chip--ship">Expédié</span>
-				</div>
-			</div>
-		</aside>
-	</section>
+            <div class="mini-board">
+                <div class="mini-board__row">
+                    <span class="source-chip source-chip--whatsapp">WhatsApp</span>
+                    <span>#83047</span>
+                    <span class="status-chip status-chip--pending">En attente</span>
+                </div>
+                <div class="mini-board__row">
+                    <span class="source-chip source-chip--facebook">Facebook</span>
+                    <span>#83046</span>
+                    <span class="status-chip status-chip--confirm">Confirmé</span>
+                </div>
+                <div class="mini-board__row">
+                    <span class="source-chip source-chip--manual">Manuel</span>
+                    <span>#83045</span>
+                    <span class="status-chip status-chip--ship">Expédié</span>
+                </div>
+            </div>
+        </aside>
+    </section>
 
-	<section class="mvp-grid">
-		<article class="info-card">
-			<p class="eyebrow">1. Landing page</p>
-			<h3>Tell the story of the product</h3>
-			<p>A concise product page that makes the workflow understandable before the first login.</p>
-		</article>
+    <section class="features-grid" data-testid="features-section">
+        <article class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3>Multi-Sources</h3>
+            <p>Capturez automatiquement les commandes depuis Facebook, WhatsApp, Instagram et Google Sheets.</p>
+        </article>
 
-		<article class="info-card">
-			<p class="eyebrow">2. Login</p>
-			<h3>Enter the workspace quickly</h3>
-			<p>A minimal sign-in screen for agents and owners without setting up full authentication yet.</p>
-		</article>
+        <article class="feature-card">
+            <div class="feature-icon">✅</div>
+            <h3>Workflow COD</h3>
+            <p>Statuts adaptés au marché algérien: En attente → Confirmé → Expédié → Livré.</p>
+        </article>
 
-		<article class="info-card">
-			<p class="eyebrow">3. Dashboard</p>
-			<h3>Work like the screenshot</h3>
-			<p>Search, filter, review orders, and update statuses in a dark confirmation dashboard.</p>
-		</article>
-	</section>
+        <article class="feature-card">
+            <div class="feature-icon">🚚</div>
+            <h3>Livraison intégrée</h3>
+            <p>Yalidine, ZR Express, Maystro, EcoTrack - tous vos transporteurs en un clic.</p>
+        </article>
+
+        <article class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Analytics temps réel</h3>
+            <p>Taux de confirmation, livraison, retours - suivez vos KPIs en direct.</p>
+        </article>
+
+        <article class="feature-card">
+            <div class="feature-icon">👥</div>
+            <h3>Multi-utilisateurs</h3>
+            <p>Agents, coordinateurs, propriétaires - chaque rôle a ses permissions.</p>
+        </article>
+
+        <article class="feature-card">
+            <div class="feature-icon">🗺️</div>
+            <h3>58 Wilayas</h3>
+            <p>Base de données complète des wilayas et communes algériennes intégrée.</p>
+        </article>
+    </section>
+
+    <section class="delivery-section">
+        <h2>Transporteurs partenaires</h2>
+        <div class="delivery-logos">
+            <div class="delivery-logo">
+                <strong>Yalidine</strong>
+                <span>Livraison rapide</span>
+            </div>
+            <div class="delivery-logo">
+                <strong>ZR Express</strong>
+                <span>Couverture nationale</span>
+            </div>
+            <div class="delivery-logo">
+                <strong>Maystro</strong>
+                <span>Stop desk & domicile</span>
+            </div>
+            <div class="delivery-logo">
+                <strong>EcoTrack</strong>
+                <span>Suivi temps réel</span>
+            </div>
+        </div>
+    </section>
 </div>
+
+<style>
+    .source-chip--whatsapp {
+        background: linear-gradient(135deg, #25d366, #128c7e);
+    }
+    
+    .source-chip--facebook {
+        background: linear-gradient(135deg, #1877f2, #0d65d9);
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-top: 2rem;
+    }
+    
+    .feature-card {
+        padding: 1.5rem;
+        border-radius: 24px;
+        background: rgba(10, 16, 30, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(16px);
+        transition: border-color 0.2s, transform 0.2s;
+    }
+    
+    .feature-card:hover {
+        border-color: rgba(140, 77, 255, 0.3);
+        transform: translateY(-4px);
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-card h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+    }
+    
+    .feature-card p {
+        margin: 0;
+        color: rgba(238, 243, 255, 0.7);
+        font-size: 0.95rem;
+    }
+    
+    .delivery-section {
+        margin-top: 3rem;
+        text-align: center;
+    }
+    
+    .delivery-section h2 {
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+    }
+    
+    .delivery-logos {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+    
+    .delivery-logo {
+        padding: 1.25rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    
+    .delivery-logo strong {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+    
+    .delivery-logo span {
+        font-size: 0.85rem;
+        color: rgba(238, 243, 255, 0.6);
+    }
+    
+    @@media (max-width: 900px) {
+        .features-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .delivery-logos {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @@media (max-width: 600px) {
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .delivery-logos {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

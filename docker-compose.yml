@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: wassel-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Wassel@2024!
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - wassel-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "Wassel@2024!" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    container_name: wassel-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=WasselDb;User Id=sa;Password=Wassel@2024!;TrustServerCertificate=True
+      - Jwt__Issuer=Wassel.Api
+      - Jwt__Audience=Wassel.Client
+      - Jwt__Key=PRODUCTION_SECRET_KEY_CHANGE_THIS_TO_A_SECURE_VALUE_64_CHARS
+      - Jwt__ExpiryMinutes=120
+    ports:
+      - "5000:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - wassel-network
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: client
+    container_name: wassel-client
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ApiBaseUrl=http://api:8080
+    ports:
+      - "5001:8081"
+    depends_on:
+      - api
+    networks:
+      - wassel-network
+    restart: unless-stopped
+
+networks:
+  wassel-network:
+    driver: bridge
+
+volumes:
+  sqlserver_data:
