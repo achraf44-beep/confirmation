@@ -1,0 +1,69 @@
+@page "/login"
+
+@inject NavigationManager Navigation
+
+<PageTitle>Wassel | Login</PageTitle>
+
+<div class="auth-page">
+    <section class="auth-card">
+        <p class="eyebrow">MVP access</p>
+        <h1>Simple login for the confirmation team</h1>
+        <p>
+            This first version uses a lightweight login screen so the product flow can be tested
+            before real authentication is wired in.
+        </p>
+
+        <div class="form-grid">
+            <label>
+                <span>Email</span>
+                <input @bind="email" autocomplete="email" placeholder="agent@wassel.dz" />
+            </label>
+
+            <label>
+                <span>Password</span>
+                <input @bind="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+            </label>
+        </div>
+
+        <div class="auth-actions">
+            <button type="button" class="btn btn-primary btn-lg" @onclick="SignIn">Login</button>
+            <NavLink class="btn btn-secondary btn-lg" href="/dashboard">Skip to dashboard</NavLink>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <p class="form-note">@message</p>
+        }
+    </section>
+
+    <aside class="auth-aside">
+        <div class="callout-card">
+            <p class="eyebrow">What this unlocks</p>
+            <h2>One workspace for COD operations</h2>
+            <ul>
+                <li>Track orders by source and status</li>
+                <li>Move between pending, confirmed, and shipped states</li>
+                <li>Prepare the dashboard for future delivery integrations</li>
+            </ul>
+        </div>
+    </aside>
+</div>
+
+@code {
+    private string email = string.Empty;
+
+    private string password = string.Empty;
+
+    private string? message;
+
+    private void SignIn()
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            message = "Enter a demo email and password to continue.";
+            return;
+        }
+
+        Navigation.NavigateTo("/dashboard");
+    }
+}

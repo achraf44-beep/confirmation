@@ -1,0 +1,241 @@
+@page "/dashboard"
+
+<PageTitle>Wassel | Dashboard</PageTitle>
+
+<div class="dashboard-page">
+    <section class="dashboard-shell">
+        <div class="dashboard-topbar">
+            <div class="search-field">
+                <input @bind="searchTerm" @bind:event="oninput" placeholder="Rechercher" />
+            </div>
+
+            <button type="button" class="filter-pill">Tous les produits</button>
+            <button type="button" class="filter-pill">All Stores</button>
+            <button type="button" class="filter-pill">Toutes les wilayas</button>
+            <button type="button" class="filter-pill">Cette année</button>
+        </div>
+
+        <div class="status-filter-row">
+            @foreach (var status in StatusFilters)
+            {
+                <button type="button"
+                        class="status-filter @(selectedStatus == status ? "status-filter--active" : string.Empty)"
+                        @onclick="() => SetStatus(status)">
+                    @status
+                </button>
+            }
+        </div>
+
+        <div class="dashboard-controls">
+            <select class="control-select">
+                <option>5</option>
+                <option>10</option>
+                <option>20</option>
+            </select>
+
+            <select class="control-select wide">
+                <option>Du plus récent au plus ancien</option>
+                <option>Du plus ancien au plus récent</option>
+            </select>
+
+            <button type="button" class="btn btn-primary create-order-btn">+ Create Order</button>
+        </div>
+
+        <div class="orders-table" role="table" aria-label="Order management dashboard">
+            <div class="orders-header" role="row">
+                <div>Client</div>
+                <div>Produits</div>
+                <div>Total</div>
+                <div>Remarque</div>
+                <div>Employé</div>
+                <div>Mode de livraison</div>
+                <div>Statut</div>
+            </div>
+
+            @foreach (var order in VisibleOrders)
+            {
+                <article class="order-row" role="row">
+                    <div class="client-cell">
+                        <span class="source-badge @order.SourceClass">@order.Source</span>
+                        <div class="client-meta">
+                            <strong>@order.OrderNumber</strong>
+                            <span>@order.Date</span>
+                            <span>@order.Customer</span>
+                            <span>@order.Wilaya</span>
+                            <span>@order.Phone</span>
+                        </div>
+                    </div>
+
+                    <div class="products-cell">
+                        @foreach (var product in order.Products)
+                        {
+                            <span>@product</span>
+                        }
+                    </div>
+
+                    <div class="total-cell">
+                        <strong>@order.Total</strong>
+                        <span>@order.Quantity</span>
+                        <span>@order.ShippingCost</span>
+                    </div>
+
+                    <div class="note-cell">
+                        <div class="note-tab-row">
+                            <span class="note-tab note-tab--active">Remarque</span>
+                            <span class="note-tab">Expédition</span>
+                        </div>
+                        <div class="note-box">@order.Note</div>
+                    </div>
+
+                    <div class="employee-cell">
+                        <span>@order.Employee</span>
+                    </div>
+
+                    <div class="delivery-cell">
+                        <span class="delivery-pill delivery-pill--main">@order.DeliveryZone</span>
+                        <span class="delivery-pill delivery-pill--secondary">@order.DeliveryType</span>
+                    </div>
+
+                    <div class="status-cell">
+                        <span class="status-pill @order.StatusClass">@order.Status</span>
+                        <button type="button" class="row-action-button">•••</button>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private readonly string[] StatusFilters =
+    [
+        "Tout",
+        "En attente",
+        "A rappeler",
+        "Tentative 1",
+        "Tentative 2",
+        "Tentative 3",
+        "Reprogrammé",
+        "Confirmé",
+        "Expédié",
+        "Livré"
+    ];
+
+    private string selectedStatus = "Tout";
+
+    private string searchTerm = string.Empty;
+
+    private readonly List<OrderRow> Orders =
+    [
+        new(
+            "Shopify",
+            "#83041",
+            "24-10-2025 22:49",
+            "Wassel test",
+            ["Wassel Product"],
+            "2500 DA",
+            "1 x 2500",
+            "0 DA",
+            "Note for the manager",
+            "test",
+            "Alger Centre",
+            "0556000010",
+            "ZR",
+            "Stop desk",
+            "En attente",
+            "source-badge--shopify",
+            "status-pill--pending"
+        ),
+        new(
+            "WooCommerce",
+            "#73460",
+            "15-10-2025 22:33",
+            "Wassel test",
+            ["Arabic text - Quantity"],
+            "3700 DA",
+            "1 x 3500",
+            "0 DA",
+            "Caller tried twice",
+            "agent 02",
+            "Oran",
+            "0556001020",
+            "ZR",
+            "Home delivery",
+            "Confirmé",
+            "source-badge--woo",
+            "status-pill--confirm"
+        ),
+        new(
+            "Manual",
+            "#11209",
+            "14-10-2025 10:10",
+            "Nadia B.",
+            ["T-shirt", "Cap"],
+            "1800 DA",
+            "2 items",
+            "300 DA",
+            "Call after Maghrib",
+            "agent 03",
+            "Blida",
+            "0556002030",
+            "ZR",
+            "Office pickup",
+            "A rappeler",
+            "source-badge--manual",
+            "status-pill--callback"
+        ),
+        new(
+            "Shopify",
+            "#54111",
+            "12-10-2025 18:05",
+            "Yassine M.",
+            ["Shoes"],
+            "6400 DA",
+            "1 x 6400",
+            "0 DA",
+            "Client confirmed yesterday",
+            "agent 01",
+            "Constantine",
+            "0556003040",
+            "ZR",
+            "Warehouse delivery",
+            "Expédié",
+            "source-badge--shopify",
+            "status-pill--ship"
+        )
+    ];
+
+    private IEnumerable<OrderRow> VisibleOrders => Orders.Where(order =>
+        (selectedStatus == "Tout" || order.Status == selectedStatus) &&
+        (
+            string.IsNullOrWhiteSpace(searchTerm) ||
+            order.OrderNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            order.Customer.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            order.Wilaya.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            order.Source.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        ));
+
+    private void SetStatus(string status)
+    {
+        selectedStatus = status;
+    }
+
+    private sealed record OrderRow(
+        string Source,
+        string OrderNumber,
+        string Date,
+        string Customer,
+        IReadOnlyList<string> Products,
+        string Total,
+        string Quantity,
+        string ShippingCost,
+        string Note,
+        string Employee,
+        string Wilaya,
+        string Phone,
+        string DeliveryZone,
+        string DeliveryType,
+        string Status,
+        string SourceClass,
+        string StatusClass);
+}

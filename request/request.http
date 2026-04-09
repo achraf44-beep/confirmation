@@ -1,0 +1,71 @@
+@baseUrl = https://localhost:7264
+
+### Register (run once on a fresh database)
+# @name register
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+	"email": "owner@confirmix.dz",
+	"password": "Pass@123",
+	"role": "Owner"
+}
+
+### Login (simple)
+# Run register first if login fails because the user does not exist.
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+	"email": "owner@confirmix.dz",
+	"password": "Pass@123"
+}
+
+### Get current user claims
+GET {{baseUrl}}/api/me
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+### Generate new access token + refresh token + expiration times
+POST {{baseUrl}}/identity/token/generate
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.$.accessToken}}
+
+{
+	"refreshToken": "optional-previous-refresh-token"
+}
+
+### Register Agent (run once on a fresh database)
+# @name registerAgent
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+	"email": "agent@confirmix.dz",
+	"password": "Pass@123",
+	"role": "Agent"
+}
+
+### Login as Agent
+# @name loginAgent
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+	"email": "agent@confirmix.dz",
+	"password": "Pass@123"
+}
+
+### Agent claims (/api/me)
+GET {{baseUrl}}/api/me
+Authorization: Bearer {{loginAgent.response.body.$.accessToken}}
+
+### Agent token generate (/identity/token/generate)
+POST {{baseUrl}}/identity/token/generate
+Content-Type: application/json
+Authorization: Bearer {{loginAgent.response.body.$.accessToken}}
+
+{
+	"refreshToken": "optional-previous-refresh-token"
+}
+
