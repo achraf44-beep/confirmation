@@ -54,7 +54,7 @@
         <div class="auth-actions">
             <button type="button" 
                     class="btn btn-primary btn-lg" 
-                    @onclick="Register"
+                    @onclick="HandleRegister"
                     disabled="@isLoading"
                     data-testid="register-submit-btn">
                 @if (isLoading)
@@ -112,7 +112,7 @@
     private bool isLoading;
     private bool isError;
 
-    private async Task Register()
+    private async Task HandleRegister()
     {
         isError = false;
         message = null;
