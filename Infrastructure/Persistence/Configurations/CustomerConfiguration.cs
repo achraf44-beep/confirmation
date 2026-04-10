@@ -34,6 +34,12 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(c => c.Address)
             .IsRequired()
             .HasMaxLength(500);
+
+        builder.Property(c => c.CreatedAtUtc)
+            .IsRequired();
+
+        builder.Property(c => c.TotalSpent)
+            .HasPrecision(18, 2);
         
         builder.HasIndex(c => c.PhoneNumber);
         builder.HasIndex(c => c.Email);

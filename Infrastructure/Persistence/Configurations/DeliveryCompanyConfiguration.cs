@@ -25,6 +25,9 @@ public sealed class DeliveryCompanyConfiguration : IEntityTypeConfiguration<Deli
         
         builder.Property(d => d.ApiKey)
             .HasMaxLength(500);
+
+        builder.Property(d => d.CreatedAtUtc)
+            .IsRequired();
         
         builder.HasIndex(d => d.Code)
             .IsUnique();

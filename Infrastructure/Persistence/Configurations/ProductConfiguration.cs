@@ -27,6 +27,9 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         
         builder.Property(p => p.Category)
             .HasMaxLength(100);
+
+        builder.Property(p => p.CreatedAtUtc)
+            .IsRequired();
         
         builder.HasIndex(p => p.Sku)
             .IsUnique()
